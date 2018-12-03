@@ -8,6 +8,8 @@ I've been playing with Rust on and off for about a year, mostly off. I'm definit
 
 Each day's challenge (1 through, hopefully, 25) is a Rust executable in `src/bin`. Thus the code for, say, Day 2's executable is located in `src/bin/day02.rs`. To run the Day 2 executable, from the root directory run `cargo run --bin day02`. To run tests, if there are any, run `cargo test --bin day02`.
 
+The input for each challenge is located in `inputs` and named by the day (so for example, `inputs/day02.txt`).
+
 ## Blog posts I've written about Advent of Code 2018
 
 1. [Eight (or So) Lessons from Days 1 and 2](https://sts10.github.io/2018/12/02/lessons-from-first-two-days-of-advent-of-code-2018.html)
