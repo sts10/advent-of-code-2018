@@ -1,0 +1,74 @@
+# Advent of Code 2018, in Rust
+
+My solutions to [Advent of Code](https://adventofcode.com/) 2018, which I'm doing in Rust (again). 
+
+I've been playing with Rust on and off for about a year, mostly off. I'm definitely still a beginner, and overall my programming logic is... spotty and informal. In general I strive for readability over brevity, and I rarely use exotic methods when a simpler one will do (even if it takes a few more lines).
+
+Note: Each of these "day" directories are _also_ git directories, as created by `crage new`. However I don't `git init` all of them. It's not ideal, but it's how I'm going to handle it this year. I'll try to stick to `master` branches throughout to try to keep things simple. Hopefully it won't really matter for readers (you).
+
+[I used Rust for the 2017 AoC, too](https://github.com/sts10/advent-of-code-2017), but didn't get super far. I'm hoping to get 20 stars (out of a possible 50) by Christmas this year.
+
+## Blog posts I've written about Advent of Code 2018
+
+1. [Eight (or So) Lessons from Days 1 and 2](https://sts10.github.io/2018/12/02/lessons-from-first-two-days-of-advent-of-code-2018.html)
+
+## Other folks using Rust for AoC 2018
+
+[Other folks posting their Rust solutions to GitHub](https://github.com/BenoitZugmeyer/RustyAdventOfCode#other-rust-implementations). Plenty more discussion on [r/adventofcode](https://www.reddit.com/r/adventofcode).
+
+## Some useful helper functions
+
+A lot of the Advent of Code puzzles require similar io tasks. Here are some functions I use often, sometimes tweaking them.
+
+This one reads a multi-line text file into a Vector. The Vector will be whatever Rust type that Rust's `parse` function gets from the file.
+
+```rust
+// from https://github.com/sts10/eyeoh/blob/master/src/lib.rs#L33
+use std::fs::File;
+use std::io;
+use std::io::BufRead;
+use std::io::BufReader;
+use std::str::FromStr;
+
+fn read_by_line<T: FromStr>(file_path: &str) -> io::Result<Vec<T>> {
+    let mut vec = Vec::new();
+    let f = match File::open(file_path.trim_matches(|c| c == '\'' || c == ' ')) {
+        Ok(res) => res,
+        Err(e) => return Err(e),
+    };
+    let file = BufReader::new(&f);
+    for line in file.lines() {
+        match line?.parse() {
+            Ok(l) => vec.push(l),
+            Err(_e) => {
+                panic!("Error reading a line of the file");
+            }
+        }
+    }
+    Ok(vec)
+}
+```
+
+If the input file is only one line with tons of characters we're going to need to iterate through, this function is handy. It reads a text file into a Vector of `char`s (characters), which is usually what we want when doing AoC challenges.
+
+```rust
+use std::fs::File;
+use std::io;
+use std::io::prelude::*;
+
+fn read_string_from_file_to_vector(file_path: &str) -> io::Result<Vec<char>> {
+  let mut f = match File::open(file_path.trim_matches(|c| c == '\'' || c == ' ')) {
+    Ok(res) => res,
+    Err(e) => return Err(e),
+  };
+  let mut string_from_file = String::new();
+  f.read_to_string(&mut string_from_file)
+    .expect("something went wrong reading the file");
+
+  let mut vector_of_chars = Vec::new();
+  for c in string_from_file.chars() {
+    vector_of_chars.push(c);
+  }
+  Ok(vector_of_chars)
+}
+```
