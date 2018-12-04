@@ -34,7 +34,7 @@ fn main() {
     let mut number_of_overlaps = 0;
     for row in whole_piece.iter() {
         for square_inch in row.iter() {
-            if square_inch > &1 {
+            if *square_inch > 1 {
                 number_of_overlaps += 1;
             }
         }
