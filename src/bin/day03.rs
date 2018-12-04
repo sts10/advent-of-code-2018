@@ -33,8 +33,8 @@ fn main() {
     // count the overlaps (more-than-ones)
     let mut number_of_overlaps = 0;
     for row in whole_piece.iter() {
-        for space in row.iter() {
-            if space > &1 {
+        for square_inch in row.iter() {
+            if square_inch > &1 {
                 number_of_overlaps += 1;
             }
         }
