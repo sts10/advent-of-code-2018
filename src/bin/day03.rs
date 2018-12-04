@@ -8,24 +8,13 @@ fn main() {
     // let mut whole_piece: [[usize; 8]; 8] = [[0; 8]; 8];
 
     let input: Vec<String> = read_by_line("inputs/day03.txt").unwrap();
-    let mut whole_piece: [[usize; 1001]; 1001] = [[0; 1001]; 1001];
-
-    // ........
-    // ...2222.
-    // ...2222.
-    // .11XX22.
-    // .11XX22.
-    // .111133.
-    // .111133.
-    // ........
+    let mut whole_piece: [[usize; 1000]; 1000] = [[0; 1000]; 1000];
 
     // build claims into Vector of Claims
     let mut claims_vec: Vec<Claim> = vec![];
     for input_claim in input {
         claims_vec.push(build_claim(&input_claim));
     }
-
-    println!("Claims vec looks like {:?}", claims_vec);
 
     // fill in claims to the whole_piece
     for claim in &claims_vec {
@@ -52,6 +41,7 @@ fn main() {
     }
 
     // if you're running the test input, this should be 4
+    // if using the real input, should be 104241
     println!("Number of overlaps: {}", number_of_overlaps);
 
     // part 2: Find the one claim that is all 1s
