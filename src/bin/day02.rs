@@ -51,7 +51,7 @@ fn find_common_characters_if_there_is_only_one_that_is_different(
         }
 
         if how_many_characters_are_different > 1 {
-            // there are already more tha 1 character different,
+            // there are already more than 1 character different,
             // so we don't need to keep checking for difference
             break;
         }
