@@ -40,32 +40,34 @@ fn main() {
 
     let mut minute_of_previous_event = 0;
     let mut guard_of_previous_event = 10;
+    let mut asleep_of_previous_event = false;
 
-    for event in &events_structs_vec {
-        // let this_guard_id;
-        if event.minute < minute_of_previous_event {
+    for next_event in events_structs_vec.iter().skip(1) {
+        let next_event_minute: u32;
+        if next_event.hour > 20 {
+            next_event_minute = 0;
+        } else {
+            next_event_minute = next_event.minute;
+        }
+        if next_event_minute < minute_of_previous_event {
             // assume it's a new night
             minute_of_previous_event = 0;
         }
-        // if event.guard_id != Some(id) {
-        //     this_guard_id = guard_of_previous_event;
-        // } else {
-        //     this_guard_id = event.guard_id;
-        // }
-        let this_guard_id = match event.guard_id {
+        // maybe something wrong with this asleep bool
+        if asleep_of_previous_event {
+            for m in minute_of_previous_event..next_event_minute {
+                guards_map
+                    .entry(guard_of_previous_event)
+                    .and_modify(|arr| arr[m as usize] += 1)
+                    .or_insert([0; 60]); // this is problematic
+            }
+        }
+        minute_of_previous_event = next_event_minute;
+        guard_of_previous_event = match next_event.guard_id {
             Some(id) => id,
             None => guard_of_previous_event,
         };
-        // maybe something wrong with this asleep bool
-        if event.asleep {
-            for m in minute_of_previous_event..event.minute {
-                guards_map
-                    .entry(this_guard_id)
-                    .and_modify(|arr| arr[m as usize] += 1)
-                    .or_insert([0; 60]);
-            }
-        }
-        guard_of_previous_event = this_guard_id;
+        asleep_of_previous_event = next_event.asleep;
     }
 
     for guard in guards_map {
