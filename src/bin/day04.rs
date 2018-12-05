@@ -1,5 +1,7 @@
 extern crate chrono;
+
 use chrono::prelude::*;
+use std::collections::HashMap;
 use std::fs::File;
 use std::io;
 use std::io::BufRead;
@@ -25,8 +27,38 @@ fn main() {
 
     // at this point, I have a Vector of Events sorted by time
 
-    // 2. Build Guard structs
+    //
+    // From this point, the date doesn't matter
+    //
 
+    // 1b. Go through events again and add a new parameter
+    // minutes_till_next_event_or_1am
+    // and (maybe) guard_id?
+
+    // 2. Build Guard structs into a Hashmap
+    let mut guards: HashMap<usize, Guard> = HashMap::new();
+
+    let mut iter = events_structs_vec.into_iter().peekable();
+
+    loop {
+        match iter.next() {
+            Some(event) => {
+                // println!("event is {:?}, peek is {:?}", event, iter.peek());
+                // let length_of_this_event = event.dt - iter.peek().unwrap().dt;
+                let length_of_this_event = iter.peek().unwrap().dt - event.dt;
+                println!("Length of this event is {:?}", length_of_this_event);
+            }
+            _ => break,
+        }
+    }
+    // event is: guard 10 wakes up
+    //
+    // guards.entry(guard)
+    // minutes_between_midnight_and_1am_asleep
+    //     .entry(m)
+    //     .and_modify(|count| *count += 1)
+    //     .or_insert(1);
+    // }
     // 3. Iterating through a collection of the Events, update
     //    (a) this_guard.minutes_between_midnight_and_1am_asleep and
     //    (b) this_guard.number_of_minutes_between_midnight_and_1am_asleep
@@ -45,10 +77,25 @@ fn build_event_structs(event_string: String) -> Event {
     let mut date_time: String =
         white_space_split_vec[0].to_owned() + " " + white_space_split_vec[1];
 
-    let date_time_len = &date_time.len();
+    // let date_time_len = &date_time.len();
     date_time.remove(0);
     date_time.pop();
     // println!("date_time: {}", date_time);
+
+    // let date_split = white_space_split_vec[0].split("-");
+    // let date_split_vec = date_split.collect::<Vec<&str>>();
+    // let year = date_split_vec[0].parse::<i32>().unwrap();
+    // let month = date_split_vec[1].parse::<u32>().unwrap();
+    // let day = date_split_vec[2].parse::<u32>().unwrap();
+
+    // let time_split = white_space_split_vec[1].split(":");
+    // let time_split_vec: Vec<&str> = time_split.collect::<Vec<&str>>();
+    // let hour = time_split_vec[0].parse::<u32>().unwrap();
+    // let minute = time_split_vec[1].parse::<u32>().unwrap();
+
+    // let dt: NaiveDateTime = NaiveDate::from_ymd(year, month, day).and_hms(hour, minute, 0);
+    // "%Y-%m-%d %H:%M:%S %z"
+    let dt: NaiveDateTime = NaiveDateTime::parse_from_str(&date_time, "%Y-%m-%d %H:%M").unwrap();
 
     let guard_id: Option<usize>;
     if white_space_split_vec[2] == "Guard" {
@@ -70,16 +117,19 @@ fn build_event_structs(event_string: String) -> Event {
     //  [1518-11-09 00:21] falls asleep
     //  [1518-06-18 00:55] wakes up
     let asleep: bool;
-    if (white_space_split_vec[2] == "Guard" || white_space_split_vec[2] == "wakes") {
+    if white_space_split_vec[2] == "Guard" || white_space_split_vec[2] == "wakes" {
         asleep = false;
     } else {
         asleep = true;
     }
     println!("Is this guard asleep? {}", asleep);
+
     Event {
         date_time: date_time,
+        dt: dt,
         guard_starting_id: guard_id,
         asleep: asleep,
+        number_of_minutes_till_next_event_or_1am: None,
     }
 }
 
@@ -87,20 +137,22 @@ fn build_event_structs(event_string: String) -> Event {
 struct Event {
     // Utc.ymd(2014, 7, 8).and_hms(9, 10, 11); // `2014-07-08T09:10:11Z
     date_time: String,
+    dt: NaiveDateTime,
     // year: usize,
     // month: usize,
     // day: usize,
-    // hour: usize,
-    // minutes: usize,
+    // hour: u32,
+    // minute: u32,
     guard_starting_id: Option<usize>,
     asleep: bool,
+    number_of_minutes_till_next_event_or_1am: Option<u32>,
 }
-// #[derive(Debug)]
-// struct Guard {
-//     id: usize,
-//     minutes_between_midnight_and_1am_asleep: Hashmap,
-//     number_of_minutes_between_midnight_and_1am_asleep: usize,
-// }
+#[derive(Debug)]
+struct Guard {
+    id: usize,
+    minutes_between_midnight_and_1am_asleep: HashMap<usize, usize>,
+    number_of_minutes_between_midnight_and_1am_asleep: usize,
+}
 
 fn read_by_line<T: FromStr>(file_path: &str) -> io::Result<Vec<T>> {
     let mut vec = Vec::new();
