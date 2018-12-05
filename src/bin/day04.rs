@@ -38,6 +38,8 @@ fn main() {
     // 2. Build Guard structs into a Hashmap
     let mut guards: HashMap<usize, Guard> = HashMap::new();
 
+    // https://play.rust-lang.org/?version=stable&mode=debug&edition=2015&gist=b9c0979cb1319898ed6077c0114b3a4d
+    // https://play.rust-lang.org/?version=stable&mode=debug&edition=2015&gist=f4f826811e89f013877a4449e73dfde9
     let mut iter = events_structs_vec.into_iter().peekable();
 
     loop {
