@@ -77,8 +77,6 @@ fn react(mut p_vec: Vec<char>) -> Vec<char> {
             break;
         }
     }
-    // let s: String = p_vec.into_iter().collect();
-    // println!("polymer is now {:?}", s);// }
     p_vec
 }
 
