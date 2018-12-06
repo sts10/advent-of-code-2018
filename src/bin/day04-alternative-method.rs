@@ -9,7 +9,8 @@ use std::io::BufReader;
 use std::str::FromStr;
 fn main() {
     println!("Hello world!");
-    let mut events_vec: Vec<String> = read_by_line("inputs/day04-test.txt").unwrap();
+    // let mut events_vec: Vec<String> = read_by_line("inputs/day04-test.txt").unwrap();
+    let mut events_vec: Vec<String> = read_by_line("inputs/day04.txt").unwrap();
     println!("Events\n{:?}", events_vec);
 
     // 1. Sort Events in chronological order
@@ -37,7 +38,17 @@ fn main() {
 
     // 2. Build Guard structs into a Hashmap
     let mut guards_map: HashMap<usize, [usize; 60]> = HashMap::new();
+    // initialize guards map with the guard id and empty minutes arrays of 60 zeros
+    for event in events_structs_vec.iter() {
+        match event.guard_id {
+            Some(id) => {
+                guards_map.entry(id).or_insert([0; 60]);
+            }
+            None => continue,
+        }
+    }
 
+    // fill in guards_map arrays
     let mut minute_of_previous_event = 0;
     let mut guard_of_previous_event = 10;
     let mut asleep_of_previous_event = false;
@@ -70,7 +81,7 @@ fn main() {
         asleep_of_previous_event = next_event.asleep;
     }
 
-    for guard in guards_map {
+    for guard in &guards_map {
         println!("Guard id {} has minutes:", guard.0);
         let mut i = 0;
         for m in guard.1.iter() {
@@ -80,37 +91,75 @@ fn main() {
         println!("");
     }
 
-    // https://play.rust-lang.org/?version=stable&mode=debug&edition=2015&gist=b9c0979cb1319898ed6077c0114b3a4d
-    // https://play.rust-lang.org/?version=stable&mode=debug&edition=2015&gist=f4f826811e89f013877a4449e73dfde9
-
-    // let mut iter = events_structs_vec.into_iter().peekable();
-
-    // loop {
-    //     match iter.next() {
-    //         Some(event) => {
-    //             // println!("event is {:?}, peek is {:?}", event, iter.peek());
-    //             // let length_of_this_event = event.dt - iter.peek().unwrap().dt;
-    //             let length_of_this_event = iter.peek().unwrap().dt - event.dt;
-    //             println!("Length of this event is {:?}", length_of_this_event);
-    //         }
-    //         _ => break,
-    //     }
-    // }
-    // event is: guard 10 wakes up
-    //
-    // guards.entry(guard)
-    // minutes_between_midnight_and_1am_asleep
-    //     .entry(m)
-    //     .and_modify(|count| *count += 1)
-    //     .or_insert(1);
-    // }
-    // 3. Iterating through a collection of the Events, update
-    //    (a) this_guard.minutes_between_midnight_and_1am_asleep and
-    //    (b) this_guard.number_of_minutes_between_midnight_and_1am_asleep
     // 4. Find the Guard with highest number of minutes asleep (we'll call
     //    him "Sleepy")
-    // 5. Find which minutes_between_midnight_and_1am that Sleepy is most
-    //    often asleep
+    let mut number_of_minutes_the_sleepiest_guard_slept: usize = 0;
+    let mut sleepiest_guard_id: usize = 10;
+    for guard in &guards_map {
+        let mut this_guards_total_minutes_asleep: usize = 0;
+        for m in guard.1.iter() {
+            this_guards_total_minutes_asleep += m;
+        }
+        if this_guards_total_minutes_asleep > number_of_minutes_the_sleepiest_guard_slept {
+            sleepiest_guard_id = *guard.0;
+            number_of_minutes_the_sleepiest_guard_slept = this_guards_total_minutes_asleep;
+        }
+    }
+    println!(
+        "The id of the sleepiest guard is {}, who was asleep for {}",
+        sleepiest_guard_id, number_of_minutes_the_sleepiest_guard_slept
+    );
+
+    // 5. Find which minute Sleepy is most often asleep
+    let sleepiest_guard_minute_array = guards_map.get(&sleepiest_guard_id).unwrap();
+    let mut sleepiest_minute_position = 1000;
+    let mut sleepiest_minute_amount_slept = 0;
+    let mut minute_number = 0;
+    for amount_slept_that_minute in sleepiest_guard_minute_array.iter() {
+        if *amount_slept_that_minute > sleepiest_minute_amount_slept {
+            println!("Found a new sleepiest minute");
+            sleepiest_minute_position = minute_number;
+            sleepiest_minute_amount_slept = *amount_slept_that_minute;
+        }
+        minute_number += 1;
+    }
+    println!("the miniute that Sleepy is most often asleep is {}. He was asleep during that minute for {} minutes", sleepiest_minute_position, sleepiest_minute_amount_slept);
+
+    println!(
+        "So! The answer to part 1 is {}",
+        sleepiest_guard_id * sleepiest_minute_position
+    );
+
+    // Part 2: Of all guards, which guard is most frequently asleep on the same minute?
+    // In the example above, Guard #99 spent minute 45 asleep more than any other guard or minute - three times in total.
+    // (In all other cases, any guard spent any minute asleep at most twice.)
+    // What is the ID of the guard you chose multiplied by the minute you chose? (In the above example, the answer would be 99 * 45 = 4455.)
+
+    let mut guard_with_highest_peak: usize = 1000;
+    let mut x_position_of_highest_peak = 1000;
+    let mut height_of_highest_peak: usize = 0;
+    for guard in &guards_map {
+        // find this guards sleepiest minute
+        let this_guard_minutes_slept_array = guard.1;
+        let mut minute_number = 0;
+        for amount_slept_that_minute in this_guard_minutes_slept_array.iter() {
+            if *amount_slept_that_minute > height_of_highest_peak {
+                println!("Found a new highest peak");
+                x_position_of_highest_peak = minute_number;
+                height_of_highest_peak = *amount_slept_that_minute;
+                guard_with_highest_peak = *guard.0;
+            }
+            minute_number += 1;
+        }
+    }
+    println!(
+        "Part 2: Guard id is {} and the minute they were asleep the most was {}",
+        guard_with_highest_peak, x_position_of_highest_peak
+    );
+    println!(
+        "Multiply them and you get {}",
+        guard_with_highest_peak * x_position_of_highest_peak
+    );
 }
 
 fn build_event_structs(event_string: String) -> Event {
@@ -245,3 +294,9 @@ fn can_sort_list_of_events_chronologically() {
     // [1518-11-05 00:45] falls asleep
     // [1518-11-05 00:55] wakes up
 }
+
+// Notes
+//
+// on the `peek` method:
+// https://play.rust-lang.org/?version=stable&mode=debug&edition=2015&gist=b9c0979cb1319898ed6077c0114b3a4d
+// https://play.rust-lang.org/?version=stable&mode=debug&edition=2015&gist=f4f826811e89f013877a4449e73dfde9
