@@ -58,21 +58,23 @@ fn react(mut p_vec: Vec<char>) -> Vec<char> {
     loop {
         let mut previous_c: char = p_vec[0];
         let mut indexes_to_remove: Vec<usize> = vec![];
-        for c in 1..p_vec_len {
+        let mut c = 1;
+        let mut made_a_change = false;
+        while c < p_vec_len {
+            previous_c = p_vec[c - 1];
             if do_these_two_chars_cancel(p_vec[c], previous_c) {
                 // println!("found a pair: {} and {}", previous_c, p_vec[c]);
                 p_vec.remove(c);
                 p_vec.remove(c - 1);
                 // println!("p_vec is {:?}", p_vec);
-                break;
-            } else {
-                previous_c = p_vec[c];
+                c -= 1;
+                p_vec_len -= 2;
+                made_a_change = true;
             }
+            c += 1;
         }
-        if p_vec.len() == p_vec_len {
+        if !made_a_change {
             break;
-        } else {
-            p_vec_len = p_vec.len();
         }
     }
     // let s: String = p_vec.into_iter().collect();
