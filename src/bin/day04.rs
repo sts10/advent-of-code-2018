@@ -9,7 +9,8 @@ use std::io::BufReader;
 use std::str::FromStr;
 fn main() {
     println!("Hello world!");
-    let mut events_vec: Vec<String> = read_by_line("inputs/day04-test.txt").unwrap();
+    // let mut events_vec: Vec<String> = read_by_line("inputs/day04-test.txt").unwrap();
+    let mut events_vec: Vec<String> = read_by_line("inputs/day04.txt").unwrap();
     println!("Events\n{:?}", events_vec);
 
     // 1. Sort Events in chronological order
@@ -36,38 +37,129 @@ fn main() {
     // and (maybe) guard_id?
 
     // 2. Build Guard structs into a Hashmap
-    let mut guards: HashMap<usize, Guard> = HashMap::new();
-
-    // https://play.rust-lang.org/?version=stable&mode=debug&edition=2015&gist=b9c0979cb1319898ed6077c0114b3a4d
-    // https://play.rust-lang.org/?version=stable&mode=debug&edition=2015&gist=f4f826811e89f013877a4449e73dfde9
-    let mut iter = events_structs_vec.into_iter().peekable();
-
-    loop {
-        match iter.next() {
-            Some(event) => {
-                // println!("event is {:?}, peek is {:?}", event, iter.peek());
-                // let length_of_this_event = event.dt - iter.peek().unwrap().dt;
-                let length_of_this_event = iter.peek().unwrap().dt - event.dt;
-                println!("Length of this event is {:?}", length_of_this_event);
+    let mut guards_map: HashMap<usize, [usize; 60]> = HashMap::new();
+    // initialize guards map with the guard id and empty minutes arrays of 60 zeros
+    for event in events_structs_vec.iter() {
+        match event.guard_id {
+            Some(id) => {
+                guards_map.entry(id).or_insert([0; 60]);
             }
-            _ => break,
+            None => continue,
         }
     }
-    // event is: guard 10 wakes up
-    //
-    // guards.entry(guard)
-    // minutes_between_midnight_and_1am_asleep
-    //     .entry(m)
-    //     .and_modify(|count| *count += 1)
-    //     .or_insert(1);
-    // }
-    // 3. Iterating through a collection of the Events, update
-    //    (a) this_guard.minutes_between_midnight_and_1am_asleep and
-    //    (b) this_guard.number_of_minutes_between_midnight_and_1am_asleep
+
+    // fill in guards_map arrays
+    let mut minute_of_previous_event = 0;
+    let mut guard_of_previous_event = 10;
+    let mut asleep_of_previous_event = false;
+
+    for next_event in events_structs_vec.iter().skip(1) {
+        let next_event_minute: u32;
+        if next_event.hour > 20 {
+            next_event_minute = 0;
+        } else {
+            next_event_minute = next_event.minute;
+        }
+        if next_event_minute < minute_of_previous_event {
+            // assume it's a new night
+            minute_of_previous_event = 0;
+        }
+        // maybe something wrong with this asleep bool
+        if asleep_of_previous_event {
+            for m in minute_of_previous_event..next_event_minute {
+                guards_map
+                    .entry(guard_of_previous_event)
+                    .and_modify(|arr| arr[m as usize] += 1)
+                    .or_insert([0; 60]); // this is problematic
+            }
+        }
+        minute_of_previous_event = next_event_minute;
+        guard_of_previous_event = match next_event.guard_id {
+            Some(id) => id,
+            None => guard_of_previous_event,
+        };
+        asleep_of_previous_event = next_event.asleep;
+    }
+
+    for guard in &guards_map {
+        println!("Guard id {} has minutes:", guard.0);
+        let mut i = 0;
+        for m in guard.1.iter() {
+            println!("{} : {}", i, m);
+            i += 1;
+        }
+        println!("");
+    }
+
     // 4. Find the Guard with highest number of minutes asleep (we'll call
     //    him "Sleepy")
-    // 5. Find which minutes_between_midnight_and_1am that Sleepy is most
-    //    often asleep
+    let mut number_of_minutes_the_sleepiest_guard_slept: usize = 0;
+    let mut sleepiest_guard_id: usize = 10;
+    for guard in &guards_map {
+        let mut this_guards_total_minutes_asleep: usize = 0;
+        for m in guard.1.iter() {
+            this_guards_total_minutes_asleep += m;
+        }
+        if this_guards_total_minutes_asleep > number_of_minutes_the_sleepiest_guard_slept {
+            sleepiest_guard_id = *guard.0;
+            number_of_minutes_the_sleepiest_guard_slept = this_guards_total_minutes_asleep;
+        }
+    }
+    println!(
+        "The id of the sleepiest guard is {}, who was asleep for {}",
+        sleepiest_guard_id, number_of_minutes_the_sleepiest_guard_slept
+    );
+
+    // 5. Find which minute Sleepy is most often asleep
+    let sleepiest_guard_minute_array = guards_map.get(&sleepiest_guard_id).unwrap();
+    let mut sleepiest_minute_position = 1000;
+    let mut sleepiest_minute_amount_slept = 0;
+    let mut minute_number = 0;
+    for amount_slept_that_minute in sleepiest_guard_minute_array.iter() {
+        if *amount_slept_that_minute > sleepiest_minute_amount_slept {
+            println!("Found a new sleepiest minute");
+            sleepiest_minute_position = minute_number;
+            sleepiest_minute_amount_slept = *amount_slept_that_minute;
+        }
+        minute_number += 1;
+    }
+    println!("the miniute that Sleepy is most often asleep is {}. He was asleep during that minute for {} minutes", sleepiest_minute_position, sleepiest_minute_amount_slept);
+
+    println!(
+        "So! The answer to part 1 is {}",
+        sleepiest_guard_id * sleepiest_minute_position
+    );
+
+    // Part 2: Of all guards, which guard is most frequently asleep on the same minute?
+    // In the example above, Guard #99 spent minute 45 asleep more than any other guard or minute - three times in total.
+    // (In all other cases, any guard spent any minute asleep at most twice.)
+    // What is the ID of the guard you chose multiplied by the minute you chose? (In the above example, the answer would be 99 * 45 = 4455.)
+
+    let mut guard_with_highest_peak: usize = 1000;
+    let mut x_position_of_highest_peak = 1000;
+    let mut height_of_highest_peak: usize = 0;
+    for guard in &guards_map {
+        // find this guards sleepiest minute
+        let this_guard_minutes_slept_array = guard.1;
+        let mut minute_number = 0;
+        for amount_slept_that_minute in this_guard_minutes_slept_array.iter() {
+            if *amount_slept_that_minute > height_of_highest_peak {
+                println!("Found a new highest peak");
+                x_position_of_highest_peak = minute_number;
+                height_of_highest_peak = *amount_slept_that_minute;
+                guard_with_highest_peak = *guard.0;
+            }
+            minute_number += 1;
+        }
+    }
+    println!(
+        "Part 2: Guard id is {} and the minute they were asleep the most was {}",
+        guard_with_highest_peak, x_position_of_highest_peak
+    );
+    println!(
+        "Multiply them and you get {}",
+        guard_with_highest_peak * x_position_of_highest_peak
+    );
 }
 
 fn build_event_structs(event_string: String) -> Event {
@@ -90,13 +182,19 @@ fn build_event_structs(event_string: String) -> Event {
     // let month = date_split_vec[1].parse::<u32>().unwrap();
     // let day = date_split_vec[2].parse::<u32>().unwrap();
 
-    // let time_split = white_space_split_vec[1].split(":");
-    // let time_split_vec: Vec<&str> = time_split.collect::<Vec<&str>>();
-    // let hour = time_split_vec[0].parse::<u32>().unwrap();
-    // let minute = time_split_vec[1].parse::<u32>().unwrap();
+    let time_split = white_space_split_vec[1].split(":");
+    let time_split_vec: Vec<&str> = time_split.collect::<Vec<&str>>();
+    let minutes_split = time_split_vec[0].split("\"");
+    let minutes: &str = minutes_split.collect::<Vec<&str>>()[0];
 
-    // let dt: NaiveDateTime = NaiveDate::from_ymd(year, month, day).and_hms(hour, minute, 0);
-    // "%Y-%m-%d %H:%M:%S %z"
+    println!("time_split_vec is -- {:#?} --", time_split_vec);
+    let hour = time_split_vec[0].parse::<u32>().unwrap();
+
+    let mut minutes_str: String = time_split_vec[1].to_string();
+    minutes_str.pop();
+    println!("minutes_str before parsing is {}", minutes_str);
+    let minute = minutes_str.parse::<u32>().unwrap();
+
     let dt: NaiveDateTime = NaiveDateTime::parse_from_str(&date_time, "%Y-%m-%d %H:%M").unwrap();
 
     let guard_id: Option<usize>;
@@ -129,7 +227,9 @@ fn build_event_structs(event_string: String) -> Event {
     Event {
         date_time: date_time,
         dt: dt,
-        guard_starting_id: guard_id,
+        minute,
+        hour,
+        guard_id: guard_id,
         asleep: asleep,
         number_of_minutes_till_next_event_or_1am: None,
     }
@@ -143,9 +243,9 @@ struct Event {
     // year: usize,
     // month: usize,
     // day: usize,
-    // hour: u32,
-    // minute: u32,
-    guard_starting_id: Option<usize>,
+    hour: u32,
+    minute: u32,
+    guard_id: Option<usize>,
     asleep: bool,
     number_of_minutes_till_next_event_or_1am: Option<u32>,
 }
@@ -194,3 +294,9 @@ fn can_sort_list_of_events_chronologically() {
     // [1518-11-05 00:45] falls asleep
     // [1518-11-05 00:55] wakes up
 }
+
+// Notes
+//
+// on the `peek` method:
+// https://play.rust-lang.org/?version=stable&mode=debug&edition=2015&gist=b9c0979cb1319898ed6077c0114b3a4d
+// https://play.rust-lang.org/?version=stable&mode=debug&edition=2015&gist=f4f826811e89f013877a4449e73dfde9
