@@ -62,8 +62,7 @@ fn react(mut p_vec: Vec<char>) -> Vec<char> {
             previous_c = p_vec[c - 1];
             if do_these_two_chars_cancel(p_vec[c], previous_c) {
                 // found a pair. let's remove them
-                p_vec.remove(c);
-                p_vec.remove(c - 1);
+                p_vec.splice(c - 1..c, vec![]);
                 p_vec_len -= 2;
                 this_pass_has_had_at_least_one_reaction = true;
             } else {
