@@ -24,6 +24,8 @@ The input for each challenge is located in `inputs` and named by the day (so for
 
 A lot of the Advent of Code puzzles require similar io tasks. Here are some functions I use often, sometimes tweaking them. I may throw some or all of them into a file in `src/lib` and import them as needed, but for now I've just been copy-and-pasting them into the executables as I need them.
 
+### `read_by_line`
+
 This one reads a multi-line text file into a Vector. The Vector will be whatever Rust type that Rust's `parse` function gets from the file.
 
 ```rust
@@ -53,6 +55,8 @@ fn read_by_line<T: FromStr>(file_path: &str) -> io::Result<Vec<T>> {
 }
 ```
 
+### `read_string_from_file_to_vector`
+
 If the input file is only one line with tons of characters we're going to need to iterate through, this function is handy. It reads a text file into a Vector of `char`s (characters), which is usually what we want when doing AoC challenges.
 
 ```rust
@@ -76,6 +80,8 @@ fn read_string_from_file_to_vector(file_path: &str) -> io::Result<Vec<char>> {
   Ok(vector_of_chars)
 }
 ```
+
+### `split_and_vectorize`
 
 I found myself often wanting to split a string slice (`&str`) by another string slice and get a vector back. 
 
