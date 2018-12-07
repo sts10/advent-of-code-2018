@@ -54,26 +54,25 @@ fn main() {
 }
 fn react(mut p_vec: Vec<char>) -> Vec<char> {
     let mut p_vec_len = p_vec.len();
-    // for _t in 0..1000000000 {
     loop {
-        let mut previous_c: char = p_vec[0];
-        let mut indexes_to_remove: Vec<usize> = vec![];
+        let mut previous_c: char;
         let mut c = 1;
-        let mut made_a_change = false;
+        let mut this_pass_has_had_at_least_one_reaction = false;
         while c < p_vec_len {
             previous_c = p_vec[c - 1];
             if do_these_two_chars_cancel(p_vec[c], previous_c) {
-                // println!("found a pair: {} and {}", previous_c, p_vec[c]);
+                // found a pair. let's remove them
                 p_vec.remove(c);
                 p_vec.remove(c - 1);
-                // println!("p_vec is {:?}", p_vec);
-                c -= 1;
                 p_vec_len -= 2;
-                made_a_change = true;
+                this_pass_has_had_at_least_one_reaction = true;
+            } else {
+                // these two weren't a pair. Move on to the next pair
+                // by shifting the iterator forward one character
+                c += 1;
             }
-            c += 1;
         }
-        if !made_a_change {
+        if !this_pass_has_had_at_least_one_reaction {
             break;
         }
     }
@@ -81,15 +80,10 @@ fn react(mut p_vec: Vec<char>) -> Vec<char> {
 }
 
 fn do_these_two_chars_cancel(a: char, b: char) -> bool {
-    // if c is upcase && previous_c is downcase && c.downcase() = previous_c
-    if a.is_uppercase() && b.is_lowercase() && a.to_lowercase().to_string() == b.to_string() {
-        true
-    } else if a.is_lowercase() && b.is_uppercase() && a.to_uppercase().to_string() == b.to_string()
-    {
-        true
-    } else {
-        false
-    }
+    // it's MUCH faster to not convert the chars into Strings before comparing them.
+    // While two <char>.lowercase() can't be compared for eqaulity, two <char>.to_ascii_lowercase() 's
+    // can be
+    a.to_ascii_lowercase() == b.to_ascii_lowercase() && a.is_uppercase() == b.is_lowercase()
 }
 
 #[test]
@@ -99,6 +93,13 @@ fn can_find_polymer_pair() {
     assert_eq!(do_these_two_chars_cancel('E', 'E'), false);
     assert_eq!(do_these_two_chars_cancel('F', 'g'), false);
     assert_eq!(do_these_two_chars_cancel('H', 'h'), true);
+}
+
+#[test]
+fn can_do_reaction() {
+    let mut p_vec: Vec<char> = read_string_from_file_to_vector("inputs/day05.txt").unwrap();
+    p_vec.pop();
+    assert_eq!(react(p_vec).len(), 10978);
 }
 fn read_string_from_file_to_vector(file_path: &str) -> io::Result<Vec<char>> {
     let mut f = match File::open(file_path.trim_matches(|c| c == '\'' || c == ' ')) {
