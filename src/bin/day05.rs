@@ -51,29 +51,26 @@ fn main() {
         "shortest possible polymer length is {}",
         shortest_polymer_result
     );
+    assert_eq!(shortest_polymer_result, 4840);
 }
 fn react(mut p_vec: Vec<char>) -> Vec<char> {
     let mut p_vec_len = p_vec.len();
-    loop {
-        let mut previous_c: char;
-        let mut c = 1;
-        let mut this_pass_has_had_at_least_one_reaction = false;
-        while c < p_vec_len {
-            previous_c = p_vec[c - 1];
-            if do_these_two_chars_cancel(p_vec[c], previous_c) {
-                // found a pair. let's remove them
-                p_vec.remove(c);
-                p_vec.remove(c - 1);
-                p_vec_len -= 2;
-                this_pass_has_had_at_least_one_reaction = true;
-            } else {
-                // these two weren't a pair. Move on to the next pair
-                // by shifting the iterator forward one character
-                c += 1;
-            }
-        }
-        if !this_pass_has_had_at_least_one_reaction {
-            break;
+    let mut previous_c: char;
+    let mut c = 1;
+    while c < p_vec_len {
+        previous_c = p_vec[c - 1];
+        if do_these_two_chars_cancel(p_vec[c], previous_c) {
+            // found a pair. let's remove them
+            // Use darin rather than remove. Drain is also a little semantically preferable
+            // to `splice`
+            p_vec.drain((c - 1)..=c);
+            p_vec_len -= 2;
+            // and, if we can, shift c back one
+            c = if c > 1 { c - 1 } else { c };
+        } else {
+            // these two weren't a pair. Move on to the next pair
+            // by shifting the iterator forward one character
+            c += 1;
         }
     }
     p_vec
