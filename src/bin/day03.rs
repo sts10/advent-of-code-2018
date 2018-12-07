@@ -32,9 +32,9 @@ fn main() {
 
     // count the overlaps (more-than-ones)
     let mut number_of_overlaps = 0;
-    for row in whole_piece.iter() {
-        for square_inch in row.iter() {
-            if *square_inch > 1 {
+    for &row in whole_piece.iter() {
+        for &square_inch in row.iter() {
+            if square_inch > 1 {
                 number_of_overlaps += 1;
             }
         }
@@ -45,7 +45,7 @@ fn main() {
     println!("Number of overlaps: {}", number_of_overlaps);
 
     // part 2: Find the one claim that is all 1s
-    for claim in &claims_vec {
+    for ref claim in &claims_vec {
         let mut this_claim_in_not_overlapped = true;
         for col_to_fill_in in claim.col..(claim.col + claim.height) {
             for row_to_fill_in in claim.row..(claim.row + claim.width) {

@@ -28,7 +28,7 @@ fn main() {
     let mut answer = None;
     // The cycle method is key here-- it makes the for loop go
     // "around the horn" of frequency_changes changes
-    for frequency_change in frequency_changes.iter().cycle() {
+    for &frequency_change in frequency_changes.iter().cycle() {
         // find the new (current) frequency
         current_frequency += frequency_change;
 
