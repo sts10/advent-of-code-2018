@@ -76,3 +76,32 @@ fn read_string_from_file_to_vector(file_path: &str) -> io::Result<Vec<char>> {
   Ok(vector_of_chars)
 }
 ```
+
+I found myself often wanting to split a string slice (`&str`) by another string slice and get a vector back. 
+
+```rust
+fn split_and_vectorize<'a>(string_to_split: &'a str, splitter: &str) -> Vec<&'a str> {
+    let split = string_to_split.split(splitter);
+    split.collect::<Vec<&str>>()
+}
+```
+
+Usage:
+
+```rust
+let event_string: &str = "Guard 13 fell asleep at 7:56";
+
+let guard_id: usize = split_and_vectorize(event_string, " ")[1].parse().unwrap();
+println!("guard id is {}", guard_id);
+
+// can nest calls to dial in a bit more
+let hour: u32 = split_and_vectorize(split_and_vectorize(event_string, " ")[5], ":")[0].parse().unwrap();
+println!("At hour {}, guard #{} fell asleep", hour, guard_id);
+
+// Take multiple elements from a split with one call (but 2 lines, including the join)
+let phrase = &split_and_vectorize(event_string, " ")[2..=3];
+let collected_phrase = phrase.join(" ");
+println!("collected phrase is {}", collected_phrase);
+```
+
+To do: have the splitter be a vector of splitters so you found just do `split_and_vectorize(event_string, vec![" ", ":"])[5]` to get `hours`.
