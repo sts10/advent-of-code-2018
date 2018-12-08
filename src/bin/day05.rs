@@ -16,8 +16,8 @@ fn main() {
     ];
     // let characters_to_try_removing: Vec<char> = vec!['a', 'b', 'c', 'd'];
     let mut shortest_polymer_result = p_vec.len();
-    let mut the_char_to_remove_that_resulted_in_shortest_polymer_result: char;
-    for char_to_remove in &characters_to_try_removing {
+    let mut _the_char_to_remove_that_resulted_in_shortest_polymer_result: char;
+    for &char_to_remove in &characters_to_try_removing {
         println!("about to try the polymer with {} removed", char_to_remove);
         // make the vector again
         let mut p_vec: Vec<char> = read_string_from_file_to_vector("inputs/day05.txt").unwrap();
@@ -31,18 +31,18 @@ fn main() {
 
         // remove all instances of char_to_remove in p_vec
         p_vec.retain(|&c| {
-            c != *char_to_remove
-                && c.to_uppercase().to_string() != *char_to_remove.to_uppercase().to_string()
+            c != char_to_remove
+                && c.to_uppercase().to_string() != char_to_remove.to_uppercase().to_string()
         });
         let reacted_polymer_len = react(p_vec).len();
         println!(
             "With {} removed, p_vec len is {}",
-            char_to_remove, reacted_polymer_len
+            &char_to_remove, reacted_polymer_len
         );
 
         if reacted_polymer_len < shortest_polymer_result {
             shortest_polymer_result = reacted_polymer_len;
-            the_char_to_remove_that_resulted_in_shortest_polymer_result = *char_to_remove;
+            // the_char_to_remove_that_resulted_in_shortest_polymer_result = char_to_remove;
         }
     }
 
@@ -55,22 +55,22 @@ fn main() {
 }
 fn react(mut p_vec: Vec<char>) -> Vec<char> {
     let mut p_vec_len = p_vec.len();
-    let mut previous_c: char;
-    let mut c = 1;
-    while c < p_vec_len {
-        previous_c = p_vec[c - 1];
-        if do_these_two_chars_cancel(p_vec[c], previous_c) {
+    let mut previous_char: char;
+    let mut index = 1;
+    while index < p_vec_len {
+        previous_char = p_vec[index - 1];
+        if do_these_two_chars_cancel(p_vec[index], previous_char) {
             // found a pair. let's remove them
             // Use darin rather than remove. Drain is also a little semantically preferable
             // to `splice`
-            p_vec.drain((c - 1)..=c);
+            p_vec.drain((index - 1)..=index);
             p_vec_len -= 2;
-            // and, if we can, shift c back one
-            c = if c > 1 { c - 1 } else { c };
+            // and, if we can, shift index back one
+            index = if index > 1 { index - 1 } else { index };
         } else {
             // these two weren't a pair. Move on to the next pair
             // by shifting the iterator forward one character
-            c += 1;
+            index += 1;
         }
     }
     p_vec
@@ -79,8 +79,9 @@ fn react(mut p_vec: Vec<char>) -> Vec<char> {
 fn do_these_two_chars_cancel(a: char, b: char) -> bool {
     // it's MUCH faster to not convert the chars into Strings before comparing them.
     // While two <char>.lowercase() can't be compared for eqaulity, two <char>.to_ascii_lowercase() 's
-    // can be
-    a.to_ascii_lowercase() == b.to_ascii_lowercase() && a.is_uppercase() == b.is_lowercase()
+    // can be.
+    // Working from that, eq_ignore_ascii_case is a even more semantically pleasant choice here
+    a.eq_ignore_ascii_case(&b) && a.is_uppercase() == b.is_lowercase()
 }
 
 #[test]
