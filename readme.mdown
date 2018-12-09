@@ -14,7 +14,8 @@ The input for each challenge is located in `inputs` and named by the day (so for
 
 ## Blog posts I've written about Advent of Code 2018
 
-1. [9 (or So) Lessons from Days 1 and 2](https://sts10.github.io/2018/12/02/lessons-from-first-two-days-of-advent-of-code-2018.html)
+1. [8 (or So) Lessons from Days 1 and 2](https://sts10.github.io/2018/12/02/lessons-from-first-two-days-of-advent-of-code-2018.html)
+2. [Optimizing Rust: The Evolution of My Day 5 Advent of Code Solution](https://sts10.github.io/2018/12/07/optimizing-rust-advent-of-code-day-5.html)
 
 ## Other folks using Rust for AoC 2018
 
